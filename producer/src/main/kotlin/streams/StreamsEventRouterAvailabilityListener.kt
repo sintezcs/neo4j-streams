@@ -38,8 +38,10 @@ class StreamsEventRouterAvailabilityListener(private val db: GraphDatabaseAPI,
             if (streamsEventRouterConfiguration.enabled && !registered) {
                 streamHandler.start()
                 streamHandler.printInvalidTopics()
-                db.registerTransactionEventHandler(txHandler)
-                streamsConstraintsService.start()
+                if (streamsEventRouterConfiguration.transactionHandlerEnabled) {
+                    db.registerTransactionEventHandler(txHandler)
+                    streamsConstraintsService.start()
+                }
                 registered = true
             }
         }

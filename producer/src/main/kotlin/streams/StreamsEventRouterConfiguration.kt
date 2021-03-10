@@ -40,7 +40,8 @@ data class StreamsEventRouterConfiguration(val enabled: Boolean = StreamsConfig.
                                            val proceduresEnabled: Boolean = StreamsConfig.PROCEDURES_ENABLED_VALUE,
                                            val nodeRouting: List<NodeRoutingConfiguration> = listOf(NodeRoutingConfiguration()),
                                            val relRouting: List<RelationshipRoutingConfiguration> = listOf(RelationshipRoutingConfiguration()),
-                                           val schemaPollingInterval: Long = 300000) {
+                                           val schemaPollingInterval: Long = 300000,
+                                           val sendAllRelationshipKeys: Boolean = StreamsConfig.SOURCE_ALL_RELATIONSHIP_KEYS_VALUE) {
 
     fun allTopics(): List<String> {
         val nodeTopics = nodeRouting.map { it.topic }
@@ -74,7 +75,8 @@ data class StreamsEventRouterConfiguration(val enabled: Boolean = StreamsConfig.
                     nodeRouting = if (nodeRouting.isEmpty()) listOf(NodeRoutingConfiguration(topic = dbName)) else nodeRouting,
                     relRouting = if (relRouting.isEmpty()) listOf(RelationshipRoutingConfiguration(topic = dbName)) else relRouting,
                     schemaPollingInterval = streamsConfig.config
-                            .getOrDefault(StreamsRoutingConfigurationConstants.SCHEMA_POLLING_INTERVAL, default.schemaPollingInterval).toString().toLong()
+                            .getOrDefault(StreamsRoutingConfigurationConstants.SCHEMA_POLLING_INTERVAL, default.schemaPollingInterval).toString().toLong(),
+                    sendAllRelationshipKeys = streamsConfig.isSendAllRelationshipKeys()
             )
         }
 

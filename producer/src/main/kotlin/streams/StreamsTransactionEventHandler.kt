@@ -24,6 +24,7 @@ import streams.events.StreamsEventMetaBuilder
 import streams.events.StreamsTransactionEvent
 import streams.events.StreamsTransactionEventBuilder
 import streams.extensions.labelNames
+import streams.utils.SchemaUtils.getAllRelationshipNodeKeys
 import streams.utils.SchemaUtils.getNodeKeys
 import java.net.InetAddress
 import java.util.concurrent.atomic.AtomicInteger
@@ -41,6 +42,8 @@ class StreamsTransactionEventHandler(private val router: StreamsEventRouter,
 
     private val nodeAll = configuration.nodeRouting.any { it.labels.isEmpty() }
     private val relAll = configuration.relRouting.any { it.name.isNullOrBlank() }
+
+    private val allRelKeys = configuration.sendAllRelationshipKeys;
 
     private val hostName = InetAddress.getLocalHost().hostName
 
@@ -204,13 +207,19 @@ class StreamsTransactionEventHandler(private val router: StreamsEventRouter,
 
                     val startLabels = it.startNode.labelNames()
                     val startNodeConstraints = filterNodeConstraintCache(startLabels)
-                    val startKeys = getNodeKeys(startLabels, it.startNode.propertyKeys.toSet(), startNodeConstraints)
-                            .toTypedArray()
+                    val startKeys = if (allRelKeys) {
+                        getAllRelationshipNodeKeys(it.startNode.propertyKeys.toSet(), startNodeConstraints).toTypedArray()
+                    } else {
+                        getNodeKeys(startLabels,it.startNode.propertyKeys.toSet(), startNodeConstraints).toTypedArray()
+                    }
 
                     val endLabels = it.endNode.labelNames()
                     val endNodeConstraints = filterNodeConstraintCache(endLabels)
-                    val endKeys = getNodeKeys(endLabels, it.endNode.propertyKeys.toSet(), endNodeConstraints)
-                            .toTypedArray()
+                    val endKeys = if (allRelKeys) {
+                        getAllRelationshipNodeKeys(it.endNode.propertyKeys.toSet(), endNodeConstraints).toTypedArray()
+                    } else {
+                        getNodeKeys(endLabels, it.endNode.propertyKeys.toSet(), endNodeConstraints).toTypedArray()
+                    }
 
                     val payload = RelationshipPayloadBuilder()
                             .withId(it.id.toString())
@@ -251,10 +260,18 @@ class StreamsTransactionEventHandler(private val router: StreamsEventRouter,
                     }
 
                     val startNodeConstraints = filterNodeConstraintCache(startNodeLabels)
-                    val startKeys = getNodeKeys(startNodeLabels, startPropertyKeys.toSet(), startNodeConstraints)
+                    val startKeys = if (allRelKeys) {
+                        getAllRelationshipNodeKeys(startPropertyKeys.toSet(), startNodeConstraints)
+                    } else {
+                        getNodeKeys(startNodeLabels, startPropertyKeys.toSet(), startNodeConstraints)
+                    }
 
                     val endNodeConstraints = filterNodeConstraintCache(endNodeLabels)
-                    val endKeys = getNodeKeys(endNodeLabels, endPropertyKeys.toSet(), endNodeConstraints)
+                    val endKeys = if (allRelKeys) {
+                        getAllRelationshipNodeKeys(endPropertyKeys.toSet(), endNodeConstraints)
+                    } else {
+                        getNodeKeys(endNodeLabels, endPropertyKeys.toSet(), endNodeConstraints)
+                    }
 
                     val startProperties = if (isStartNodeDeleted) {
                         val payload = builder.nodeDeletedPayload(it.startNode.id)!!

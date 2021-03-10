@@ -35,6 +35,8 @@ data class StreamsConfig(private val log: Log, private val dbms: DatabaseManagem
         const val SYSTEM_DB_WAIT_TIMEOUT = "streams.systemdb.wait.timeout"
         const val SYSTEM_DB_WAIT_TIMEOUT_VALUE = 10000L
         const val POLL_INTERVAL = "streams.sink.poll.interval"
+        const val SOURCE_ALL_RELATIONSHIP_KEYS = "streams.source.all.relationship.keys"
+        const val SOURCE_ALL_RELATIONSHIP_KEYS_VALUE = false
         private var afterInitListeners = mutableListOf<((MutableMap<String, String>) -> Unit)>()
 
         fun registerListener(after: (MutableMap<String, String>) -> Unit) {
@@ -145,5 +147,7 @@ data class StreamsConfig(private val log: Log, private val dbms: DatabaseManagem
 
     fun getSystemDbWaitTimeout() = this.config.getOrDefault(SYSTEM_DB_WAIT_TIMEOUT, SYSTEM_DB_WAIT_TIMEOUT_VALUE)
             .toString().toLong()
+
+    fun isSendAllRelationshipKeys() = this.config.getOrDefault(SOURCE_ALL_RELATIONSHIP_KEYS, SOURCE_ALL_RELATIONSHIP_KEYS_VALUE).toString().toBoolean()
 
 }

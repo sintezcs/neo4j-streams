@@ -18,6 +18,15 @@ object SchemaUtils {
                 .orEmpty()
 //                .ifEmpty { propertyKeys }
 
+    fun getAllRelationshipNodeKeys(propertyKeys: Set<String>, constraints: List<Constraint>): Set<String> =
+        constraints
+            .filter { constraint ->
+                constraint.type == StreamsConstraintType.UNIQUE
+                        && propertyKeys.containsAll(constraint.properties)
+            }
+            .flatMap { it.properties }
+            ?.toSet()
+
     fun toStreamsTransactionEvent(streamsSinkEntity: StreamsSinkEntity,
                                   evaluation: (StreamsTransactionEvent) -> Boolean)
             : StreamsTransactionEvent? = if (streamsSinkEntity.value != null) {
